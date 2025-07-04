@@ -1,1 +1,21 @@
+# PyInstaller build artifacts
+/build/
+/dist/
+*.spec
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+
+# IDE files
+.vscode/
+.idea/
+
+# RegUI specific
 regui_profiles.ini

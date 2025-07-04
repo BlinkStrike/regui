@@ -1,0 +1,68 @@
+name: Build and Release RegUI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            asset_name: RegUI-Linux
+            pyinstaller_args: "--onefile --noconsole"
+          - os: macos-latest
+            asset_name: RegUI-macOS
+            pyinstaller_args: "--onefile --windowed"
+          - os: windows-latest
+            asset_name: RegUI-Windows.exe
+            pyinstaller_args: "--onefile --windowed"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build with PyInstaller
+      run: pyinstaller ${{ matrix.pyinstaller_args }} --name=${{ matrix.asset_name }} regui.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: dist/${{ matrix.asset_name }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create a release
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/RegUI-Linux/RegUI-Linux
+          dist/RegUI-macOS/RegUI-macOS
+          dist/RegUI-Windows.exe/RegUI-Windows.exe
